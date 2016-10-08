@@ -1,6 +1,7 @@
 package com.denismorozov.great
 
 import com.badlogic.gdx.Game
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.denismorozov.great.screens.GameScreen
@@ -13,6 +14,7 @@ class GreatGame : Game() {
         batch = SpriteBatch()
         font = BitmapFont() // Arial
         font.data.setScale(2f)
+        font.color = Color.CYAN
         setScreen(GameScreen(this))
     }
 
