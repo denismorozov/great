@@ -7,8 +7,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad
 
 val deadZoneRadius = 10f
-val position = Vector2(75f, 75f)
-val size = Vector2(300f, 300f)
+val position = Vector2(50f, 50f)
+val size = Vector2(200f, 200f)
 
 object Joystick {
     var touchpad: Touchpad

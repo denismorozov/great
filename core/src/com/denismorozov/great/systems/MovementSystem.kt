@@ -15,8 +15,7 @@ class MovementSystem : IteratingSystem(
     override fun processEntity(entity: Entity, deltaTime: Float) {
         val position = pm.get(entity)
         val velocity = vm.get(entity)
-        val movementSpeed = 10
-        position.x += velocity.x * deltaTime * Joystick.touchpad.knobPercentX * movementSpeed
-        position.y += velocity.y * deltaTime * Joystick.touchpad.knobPercentY * movementSpeed
+        position.x += velocity.velocity * deltaTime * Joystick.touchpad.knobPercentX
+        position.y += velocity.velocity * deltaTime * Joystick.touchpad.knobPercentY
     }
 }

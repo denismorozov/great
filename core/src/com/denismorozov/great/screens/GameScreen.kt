@@ -49,7 +49,7 @@ class GameScreen(internal val game: GreatGame) : Screen {
 
         val player2 = Entity()
             .add(PositionComponent(camera.viewportWidth/2, camera.viewportHeight/2))
-            .add(VelocityComponent(100f, 100f))
+            .add(VelocityComponent(150f))
             .add(SpriteComponent(Texture(Gdx.files.internal("player.png"))))
             .add(RenderableComponent())
 
