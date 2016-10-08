@@ -7,11 +7,11 @@ import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.Sprite
+import com.badlogic.gdx.maps.tiled.TiledMap
+import com.badlogic.gdx.maps.tiled.TiledMapRenderer
+import com.badlogic.gdx.maps.tiled.TmxMapLoader
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.Skin
-import com.badlogic.gdx.scenes.scene2d.ui.Touchpad
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.denismorozov.great.GreatGame
 import com.denismorozov.great.components.PositionComponent
@@ -22,29 +22,31 @@ import com.denismorozov.great.input.Joystick
 import com.denismorozov.great.systems.MovementSystem
 import com.denismorozov.great.systems.RenderSystem
 
-class GameScreen(internal val game: GreatGame) : Screen {
-//    private val player: Sprite
+class GameScreen(private val game: GreatGame) : Screen {
     private val camera: OrthographicCamera
-    private val stage: Stage
-//)
     private val viewport: FitViewport
 
+    private val stage: Stage
     private val engine: Engine
 
-    init {
+    private val tiledMap: TiledMap
+    private val tiledMapRenderer: TiledMapRenderer
 
+    init {
         camera = OrthographicCamera()
         viewport = FitViewport(1280f, 720f, camera)
         viewport.apply()
         camera.setToOrtho(false)
+        camera.update() // check necessity
+        tiledMap = TmxMapLoader().load("map.tmx")
+        tiledMapRenderer = OrthogonalTiledMapRenderer(tiledMap) // accepts unit scale - how many pixels map to world unit
 
         engine = Engine()
         engine.addSystem(MovementSystem())
         engine.addSystem(RenderSystem(game.batch))
 
         stage = Stage(viewport, game.batch)
-        val joy = Joystick
-        stage.addActor(joy.touchpad)
+        stage.addActor(Joystick.touchpad)
         Gdx.input.inputProcessor = stage
 
         val player2 = Entity()
@@ -54,38 +56,14 @@ class GameScreen(internal val game: GreatGame) : Screen {
             .add(RenderableComponent())
 
         engine.addEntity(player2)
-
-
-
-//        touchpadSkin = Skin()
-//        touchpadSkin.add("touchBackground", Texture(Gdx.files.internal("touchBackground.png")))
-//        touchpadSkin.add("touchKnob", Texture(Gdx.files.internal("touchKnob.png")))
-//        touchBackground = touchpadSkin.getDrawable("touchBackground")
-//        touchKnob = touchpadSkin.getDrawable("touchKnob")
-//
-//        touchpadStyle = Touchpad.TouchpadStyle()
-//        touchpadStyle.background = touchBackground
-//        touchpadStyle.knob = touchKnob
-
-//        touchpad = Touchpad(10f, touchpadStyle)
-//        touchpad.setBounds(75f, 75f, 300f, 300f)
-
-
-
-//        val playerTexture = Texture(Gdx.files.internal("player.png"))
-//        player = Sprite(playerTexture)
-//        player.setPosition(camera.viewportWidth/2, camera.viewportHeight/2)
-//        player.setSize(100f, 100f)
     }
 
     override fun render(delta: Float) {
         Gdx.gl.glClearColor(0f, 0f, 0.1f, 1f) // rgba
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
-
-
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         camera.update()
-        game.batch.projectionMatrix = camera.combined
 
 //        if (player.x < 0) {
 //            player.x = 0f
@@ -99,8 +77,11 @@ class GameScreen(internal val game: GreatGame) : Screen {
 //            player.y = (camera.viewportHeight - player.height).toFloat()
 //        }
 
+        tiledMapRenderer.setView(camera)
+        tiledMapRenderer.render()
+
+        game.batch.projectionMatrix = camera.combined
         game.batch.begin()
-//        player.draw(game.batch)
         game.font.draw(game.batch, "X: ${Joystick.touchpad.knobPercentX * 100}%", 50f, camera.viewportHeight - 50f)
         game.font.draw(game.batch, "Y: ${Joystick.touchpad.knobPercentY * 100}%", 50f, camera.viewportHeight - 100f)
         game.font.draw(game.batch, "FPS: ${Gdx.graphics.framesPerSecond}", camera.viewportWidth - 150f, camera.viewportHeight - 50f)
@@ -129,6 +110,6 @@ class GameScreen(internal val game: GreatGame) : Screen {
     }
 
     override fun dispose() {
-//        player.texture.dispose()
+        tiledMap.dispose()
     }
 }
