@@ -12,7 +12,6 @@ import com.badlogic.gdx.maps.tiled.TiledMap
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
-import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.denismorozov.great.GreatGame
@@ -31,8 +30,8 @@ class GameScreen(private val game: GreatGame) : Screen {
     private val stage: Stage
     private val engine: Engine
 
-    private val tiledMap: TiledMap
-    private val tiledMapRenderer: TiledMapRenderer
+    private val map: TiledMap
+    private val mapRenderer: TiledMapRenderer
 
     init {
         camera = OrthographicCamera()
@@ -46,9 +45,9 @@ class GameScreen(private val game: GreatGame) : Screen {
         Gdx.app.log("Camera init", "Viewport x " + camera.viewportWidth)
         Gdx.app.log("Camera init", "Viewport y " + camera.viewportHeight)
 
-        tiledMap = TmxMapLoader().load("map.tmx")
-        tiledMapRenderer = OrthogonalTiledMapRenderer(tiledMap) // accepts unit scale - how many pixels map to world unit
-        val mapProps = tiledMap.properties
+        map = TmxMapLoader().load("map.tmx")
+        mapRenderer = OrthogonalTiledMapRenderer(map) // accepts unit scale - how many pixels map to world unit
+        val mapProps = map.properties
         val numTiles = object {
             val x: Int = mapProps.get("width", Integer::class.java) as Int
             val y: Int = mapProps.get("height", Integer::class.java) as Int
@@ -111,8 +110,8 @@ class GameScreen(private val game: GreatGame) : Screen {
 //            player.y = (camera.viewportHeight - player.height).toFloat()
 //        }
 
-        tiledMapRenderer.setView(camera)
-        tiledMapRenderer.render()
+        mapRenderer.setView(camera)
+        mapRenderer.render()
 
         game.batch.projectionMatrix = camera.combined
         game.batch.begin()
@@ -145,6 +144,6 @@ class GameScreen(private val game: GreatGame) : Screen {
     }
 
     override fun dispose() {
-        tiledMap.dispose()
+        map.dispose()
     }
 }
