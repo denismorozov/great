@@ -90,7 +90,10 @@ class GameScreen(private val game: GreatGame) : Screen {
         engine.addSystem(PhysicsDebugSystem(world, camera))
 
         engine.addEntity(createPlayer())
-        engine.addEntity(createEnemy())
+        engine.addEntity(createEnemy(100f, 100f))
+        engine.addEntity(createEnemy(100f, -100f))
+        engine.addEntity(createEnemy(-100f, 100f))
+        engine.addEntity(createEnemy(-100f, -100f))
     }
 
     private fun createPlayer(): Entity {
@@ -119,7 +122,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         return player
     }
 
-    private fun createEnemy(): Entity {
+    private fun createEnemy(x: Float, y:Float): Entity {
         val enemy = engine.createEntity()
 
         enemy
@@ -129,7 +132,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         val bodyDef = BodyDef()
         bodyDef.type = BodyDef.BodyType.DynamicBody
         val center = Vector3(Gdx.graphics.width/2f, Gdx.graphics.height/2f, 0f)
-        bodyDef.position.set(center.x + 100f, center.y - 100f)
+        bodyDef.position.set(center.x + x, center.y + y)
         val body = world.createBody(bodyDef)
         val circle = CircleShape()
         circle.radius = 50f
@@ -137,7 +140,6 @@ class GameScreen(private val game: GreatGame) : Screen {
         fixtureDef.shape = circle
         fixtureDef.density = 1f
         fixtureDef.restitution = 0.2f
-        fixtureDef.friction = 0.75f;
         body.createFixture(fixtureDef)
         circle.dispose()
         enemy.add(BodyComponent(body))
@@ -149,10 +151,10 @@ class GameScreen(private val game: GreatGame) : Screen {
         Gdx.gl.glClearColor(0f, 0f, 0.1f, 1f) // rgba
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
+//        game.batch.enableBlending()
 
         camera.update()
         game.batch.projectionMatrix = camera.combined
-//        game.batch.enableBlending()
 
         mapRenderer.setView(camera)
         mapRenderer.render()
