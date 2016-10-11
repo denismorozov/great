@@ -1,21 +1,35 @@
 package com.denismorozov.great.systems
 
-import com.badlogic.ashley.core.*
+
+import com.badlogic.ashley.core.ComponentMapper
+import com.badlogic.ashley.core.Entity
+import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
-import com.denismorozov.great.components.PositionComponent
-import com.denismorozov.great.components.VelocityComponent
+import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.math.Vector3
+import com.denismorozov.great.components.*
 import com.denismorozov.great.input.Joystick
 
-class MovementSystem : IteratingSystem(
-        Family.all(PositionComponent::class.java, VelocityComponent::class.java).get()
+class MovementSystem(val camera: Camera) : IteratingSystem(
+        Family.all(PlayerComponent::class.java).get()
 ) {
-    private val pm = ComponentMapper.getFor(PositionComponent::class.java)
-    private val vm = ComponentMapper.getFor(VelocityComponent::class.java)
+    private val bodyM = ComponentMapper.getFor(BodyComponent::class.java)
 
     override fun processEntity(entity: Entity, deltaTime: Float) {
-        val position = pm.get(entity)
-        val velocity = vm.get(entity)
-        position.x += velocity.velocity * deltaTime * Joystick.touchpad.knobPercentX
-        position.y += velocity.velocity * deltaTime * Joystick.touchpad.knobPercentY
+        val body = bodyM.get(entity).body
+        val currentVelocity = body.linearVelocity
+
+        val maxVelocity = 500f
+        val desiredVelocityX = maxVelocity * Joystick.X
+        val desiredVelocityY = maxVelocity * Joystick.Y
+        val velocityChangeX = desiredVelocityX - currentVelocity.x
+        val velocityChangeY = desiredVelocityY - currentVelocity.y
+        val impulseX = body.mass * velocityChangeX
+        val impulseY = body.mass * velocityChangeY
+
+        body.applyLinearImpulse(Vector2(impulseX, impulseY), body.worldCenter, false)
+        camera.position.x = body.position.x
+        camera.position.y = body.position.y
     }
 }

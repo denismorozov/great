@@ -5,13 +5,19 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Touchpad
+import com.denismorozov.great.systems.RenderingSystem
 
-val deadZoneRadius = 10f
-val position = Vector2(50f, 50f)
+val deadZoneRadius = 1f
+val position = Vector2(Gdx.app.graphics.width/8f, Gdx.app.graphics.height/8f)
 val size = Vector2(200f, 200f)
 
 object Joystick {
-    var touchpad: Touchpad
+    val touchpad: Touchpad
+    val X: Float
+        get() = touchpad.knobPercentX
+    val Y: Float
+        get() = touchpad.knobPercentY
+
     init {
         val skin = Skin()
         skin.add("background", Texture(Gdx.files.internal("touchBackground.png")))
