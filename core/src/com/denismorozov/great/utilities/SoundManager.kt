@@ -1,4 +1,4 @@
-package com.denismorozov.great
+package com.denismorozov.great.utilities
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.audio.Sound

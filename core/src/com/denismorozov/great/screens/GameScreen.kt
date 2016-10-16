@@ -2,14 +2,12 @@ package com.denismorozov.great.screens
 
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
-import com.badlogic.gdx.Application
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.maps.tiled.TiledMap
 import com.badlogic.gdx.maps.tiled.TiledMapRenderer
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
@@ -18,7 +16,6 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.box2d.*
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.utils.viewport.FillViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.denismorozov.great.GreatGame
 import com.denismorozov.great.components.*
@@ -52,45 +49,17 @@ class GameScreen(private val game: GreatGame) : Screen {
         hudCamera = OrthographicCamera()
         hudViewport = FitViewport(screenWidth.toFloat(), screenHeight.toFloat(), hudCamera)
         hudViewport.apply(true)
-
         stage = Stage(hudViewport, game.batch)
         stage.addActor(Joystick.touchpad)
         Gdx.input.inputProcessor = stage
 
         gameCamera = OrthographicCamera()
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
-        gameViewport.apply(true)
-
-        Gdx.app.log("Camera init", "Global x " + screenWidth)
-        Gdx.app.log("Camera init", "Global y " + screenHeight)
-        Gdx.app.log("Camera init", "Viewport x " + gameCamera.viewportWidth)
-        Gdx.app.log("Camera init", "Viewport y " + gameCamera.viewportHeight)
-
+        gameViewport.apply(false)
 
         map = TmxMapLoader().load("map.tmx")
-        val pixelsPerPeter: Float = screenWidth / worldWidth
-        mapRenderer = OrthogonalTiledMapRenderer(map, pixelsPerPeter)
-
-//        val mapProps = map.properties
-//        val numTiles = object {
-//            val x: Int = mapProps.get("width", Integer::class.java) as Int
-//            val y: Int = mapProps.get("height", Integer::class.java) as Int
-//        }
-//        val tilePixels = object {
-//           val x: Int = mapProps.get("tilewidth", Integer::class.java) as Int
-//           val y: Int = mapProps.get("tileheight", Integer::class.java) as Int
-//        }
-//        val mapPixels = object {
-//            val x = numTiles.x * tilePixels.x
-//            val y = numTiles.y * tilePixels.y
-//        }
-//        Gdx.app.log("Map init", "Num tiles x " + numTiles.x.toString())
-//        Gdx.app.log("Map init", "Num tiles y " + numTiles.y.toString())
-//        Gdx.app.log("Map init", "Tile pixels x " + tilePixels.y.toString())
-//        Gdx.app.log("Map init", "Tile tiles y " + tilePixels.y.toString())
-//        Gdx.app.log("Map init", "Map pixels x " + mapPixels.y.toString())
-//        Gdx.app.log("Map init", "Map pixels y " + mapPixels.y.toString())
-
+        val someArbitraryScaleThatLooksGood = 1f/30f
+        mapRenderer = OrthogonalTiledMapRenderer(map, someArbitraryScaleThatLooksGood)
 
         world = World(Vector2(0f, 0f), false)
 
@@ -118,8 +87,7 @@ class GameScreen(private val game: GreatGame) : Screen {
 
         val bodyDef = BodyDef()
         bodyDef.type = BodyDef.BodyType.DynamicBody
-        // @TODO convert to meters
-        val center = Vector3(Gdx.graphics.width/2f, Gdx.graphics.height/2f, 0f)
+        val center = Vector3(worldWidth/2f, worldHeight/2f, 0f)
         bodyDef.position.set(center.x, center.y)
         val body = world.createBody(bodyDef)
         val circle = CircleShape()
@@ -144,7 +112,7 @@ class GameScreen(private val game: GreatGame) : Screen {
 
         val bodyDef = BodyDef()
         bodyDef.type = BodyDef.BodyType.DynamicBody
-        val center = Vector3(Gdx.graphics.width/2f, Gdx.graphics.height/2f, 0f)
+        val center = Vector3(worldWidth/2f, worldHeight/2f, 0f)
         bodyDef.position.set(center.x + x, center.y + y)
         val body = world.createBody(bodyDef)
         val circle = CircleShape()
@@ -164,18 +132,16 @@ class GameScreen(private val game: GreatGame) : Screen {
         Gdx.gl.glClearColor(0f, 0f, 0.1f, 1f) // rgba
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
-//        game.batch.enableBlending()
-        gameCamera.update()
 
         hudViewport.apply()
-        mapRenderer.setView(hudCamera)
+        mapRenderer.setView(gameCamera)
         mapRenderer.render()
 
         game.batch.projectionMatrix = gameCamera.combined
-        gameViewport.apply() // not sure
+        gameViewport.apply()
         engine.update(delta)
+        gameCamera.update()
 
-        game.batch.projectionMatrix = hudCamera.combined
         stage.viewport.apply()
         stage.act(delta)
         stage.draw()

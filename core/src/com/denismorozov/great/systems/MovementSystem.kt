@@ -5,7 +5,9 @@ import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.math.Vector
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.denismorozov.great.components.*
@@ -20,7 +22,7 @@ class MovementSystem(val camera: Camera) : IteratingSystem(
         val body = bodyM.get(entity).body
         val currentVelocity = body.linearVelocity
 
-        val maxVelocity = 500f
+        val maxVelocity = 1.25f
         val desiredVelocityX = maxVelocity * Joystick.X
         val desiredVelocityY = maxVelocity * Joystick.Y
         val velocityChangeX = desiredVelocityX - currentVelocity.x
@@ -28,8 +30,8 @@ class MovementSystem(val camera: Camera) : IteratingSystem(
         val impulseX = body.mass * velocityChangeX
         val impulseY = body.mass * velocityChangeY
 
-        body.applyLinearImpulse(Vector2(impulseX, impulseY), body.worldCenter, false)
-        camera.position.x = body.position.x
-        camera.position.y = body.position.y
+        body.applyLinearImpulse(Vector2(impulseX, impulseY), body.worldCenter, true)
+        camera.position.x += (body.position.x - camera.position.x) * 1.5f * deltaTime
+        camera.position.y += (body.position.y - camera.position.y) * 1.5f * deltaTime
     }
 }
