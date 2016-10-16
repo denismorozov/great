@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.denismorozov.great.GreatGame
 import com.denismorozov.great.components.*
 import com.denismorozov.great.input.Joystick
+import com.denismorozov.great.input.Touch
 import com.denismorozov.great.systems.*
 
 class GameScreen(private val game: GreatGame) : Screen {
@@ -57,7 +58,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         stage = Stage(hudViewport, game.batch)
         stage.addActor(Joystick.touchpad)
         //stage.addActor()
-        val inputMultiplexer = InputMultiplexer(stage)
+        val inputMultiplexer = InputMultiplexer(stage, Touch())
         Gdx.input.inputProcessor = inputMultiplexer
 
         gameCamera = OrthographicCamera()
