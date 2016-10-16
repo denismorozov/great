@@ -58,8 +58,6 @@ class GameScreen(private val game: GreatGame) : Screen {
         stage = Stage(hudViewport, game.batch)
         stage.addActor(Joystick.touchpad)
         //stage.addActor()
-        val inputMultiplexer = InputMultiplexer(stage, Touch())
-        Gdx.input.inputProcessor = inputMultiplexer
 
         gameCamera = OrthographicCamera()
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
@@ -86,6 +84,10 @@ class GameScreen(private val game: GreatGame) : Screen {
         engine.addEntity(createEnemy(1f, -1f))
         engine.addEntity(createEnemy(-1f, 1f))
         engine.addEntity(createEnemy(-1f, -1f))
+
+        val touchInput = Touch(gameCamera, engine, world)
+        val inputMultiplexer = InputMultiplexer(stage, touchInput)
+        Gdx.input.inputProcessor = inputMultiplexer
     }
 
     private fun createPlayer(): Entity {
