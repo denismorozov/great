@@ -30,32 +30,32 @@ class RenderingSystem(private val batch: SpriteBatch) : IteratingSystem(
 //        }
 //    }
 
-    companion object {
-        internal val PPM = 1f
-        internal val FRUSTUM_WIDTH = Gdx.graphics.width / PPM
-        internal val FRUSTUM_HEIGHT = Gdx.graphics.height / PPM
-
-        val PIXELS_TO_METRES = 1.0f / PPM
-
-        private val meterDimensions = Vector2()
-        private val pixelDimensions = Vector2()
-        val screenSizeInMeters: Vector2
-            get() {
-                meterDimensions.set(Gdx.graphics.width * PIXELS_TO_METRES,
-                        Gdx.graphics.height * PIXELS_TO_METRES)
-                return meterDimensions
-            }
-
-        val screenSizeInPixesl: Vector2
-            get() {
-                pixelDimensions.set(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
-                return pixelDimensions
-            }
-
-        fun PixelsToMeters(pixelValue: Float): Float {
-            return pixelValue * PIXELS_TO_METRES
-        }
-    }
+//    companion object {
+//        internal val PPM = 32f
+//        internal val FRUSTUM_WIDTH = Gdx.graphics.width / PPM
+//        internal val FRUSTUM_HEIGHT = Gdx.graphics.height / PPM
+//
+//        val PIXELS_TO_METRES = 1.0f / PPM
+//
+//        private val meterDimensions = Vector2()
+//        private val pixelDimensions = Vector2()
+//        val screenSizeInMeters: Vector2
+//            get() {
+//                meterDimensions.set(Gdx.graphics.width * PIXELS_TO_METRES,
+//                        Gdx.graphics.height * PIXELS_TO_METRES)
+//                return meterDimensions
+//            }
+//
+//        val screenSizeInPixesl: Vector2
+//            get() {
+//                pixelDimensions.set(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
+//                return pixelDimensions
+//            }
+//
+//        fun PixelsToMeters(pixelValue: Float): Float {
+//            return pixelValue * PIXELS_TO_METRES
+//        }
+//    }
 
     private val renderQueue = Array<Entity>()
 //    private val comparator: Comparator<Entity>? = null
@@ -78,8 +78,10 @@ class RenderingSystem(private val batch: SpriteBatch) : IteratingSystem(
                 continue
             }
 
-            val width = texture.region.regionWidth.toFloat()
-            val height = texture.region.regionHeight.toFloat()
+//            val width = texture.region.regionWidth.toFloat()
+            val width = 1f
+//            val height = texture.region.regionHeight.toFloat()
+            val height = 1f
 
             val originX = width / 2f
             val originY = height / 2f
@@ -92,8 +94,8 @@ class RenderingSystem(private val batch: SpriteBatch) : IteratingSystem(
                 originY,
                 width,
                 height,
-                PixelsToMeters(transform.scale.x),
-                PixelsToMeters(transform.scale.y),
+                transform.scale.x,
+                transform.scale.y,
                 transform.rotation
             )
         }

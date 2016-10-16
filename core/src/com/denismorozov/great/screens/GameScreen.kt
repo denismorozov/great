@@ -26,8 +26,10 @@ import com.denismorozov.great.input.Joystick
 import com.denismorozov.great.systems.*
 
 class GameScreen(private val game: GreatGame) : Screen {
-    private val camera: OrthographicCamera
-    private val viewport: FitViewport
+    private val hudCamera: OrthographicCamera
+    private val hudViewport: FitViewport
+    private val gameCamera: OrthographicCamera
+    private val gameViewport: FitViewport
 
     private val engine: PooledEngine
 
@@ -37,27 +39,37 @@ class GameScreen(private val game: GreatGame) : Screen {
     private val stage: Stage
     private val world: World
 
-    init {
-        camera = OrthographicCamera()
-        viewport = FitViewport(RenderingSystem.FRUSTUM_WIDTH, RenderingSystem.FRUSTUM_HEIGHT)
-        viewport.apply()
-        camera.setToOrtho(false)
+    companion object {
+        val screenWidth: Int
+            get() = Gdx.graphics.width
+        val screenHeight: Int
+            get() = Gdx.graphics.height
+        val worldWidth = 16f
+        val worldHeight = 9f
+    }
 
-        stage = Stage(viewport, game.batch)
+    init {
+        hudCamera = OrthographicCamera()
+        hudViewport = FitViewport(screenWidth.toFloat(), screenHeight.toFloat(), hudCamera)
+        hudViewport.apply(true)
+
+        stage = Stage(hudViewport, game.batch)
         stage.addActor(Joystick.touchpad)
         Gdx.input.inputProcessor = stage
 
-        Gdx.app.log("Camera init", "Global x " + Gdx.graphics.width)
-        Gdx.app.log("Camera init", "Global y " + Gdx.graphics.height)
-        Gdx.app.log("Camera init", "Viewport x " + camera.viewportWidth)
-        Gdx.app.log("Camera init", "Viewport y " + camera.viewportHeight)
+        gameCamera = OrthographicCamera()
+        gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
+        gameViewport.apply(true)
 
-        Gdx.app.log("Camera pos x", camera.position.x.toString())
-        Gdx.app.log("Camera pos y", camera.position.y.toString())
-        Gdx.app.log("Camera pos z", camera.position.z.toString())
+        Gdx.app.log("Camera init", "Global x " + screenWidth)
+        Gdx.app.log("Camera init", "Global y " + screenHeight)
+        Gdx.app.log("Camera init", "Viewport x " + gameCamera.viewportWidth)
+        Gdx.app.log("Camera init", "Viewport y " + gameCamera.viewportHeight)
+
 
         map = TmxMapLoader().load("map.tmx")
-        mapRenderer = OrthogonalTiledMapRenderer(map, 20f) // accepts unit scale - how many pixels map to world unit
+        val pixelsPerPeter: Float = screenWidth / worldWidth
+        mapRenderer = OrthogonalTiledMapRenderer(map, pixelsPerPeter)
 
 //        val mapProps = map.properties
 //        val numTiles = object {
@@ -84,16 +96,16 @@ class GameScreen(private val game: GreatGame) : Screen {
 
         engine = PooledEngine()
 
-        engine.addSystem(MovementSystem(camera))
+        engine.addSystem(MovementSystem(gameCamera))
         engine.addSystem(RenderingSystem(game.batch))
         engine.addSystem(PhysicsSystem(world))
-        engine.addSystem(PhysicsDebugSystem(world, camera))
+        engine.addSystem(PhysicsDebugSystem(world, gameCamera))
 
         engine.addEntity(createPlayer())
-        engine.addEntity(createEnemy(100f, 100f))
-        engine.addEntity(createEnemy(100f, -100f))
-        engine.addEntity(createEnemy(-100f, 100f))
-        engine.addEntity(createEnemy(-100f, -100f))
+        engine.addEntity(createEnemy(1f, 1f))
+        engine.addEntity(createEnemy(1f, -1f))
+        engine.addEntity(createEnemy(-1f, 1f))
+        engine.addEntity(createEnemy(-1f, -1f))
     }
 
     private fun createPlayer(): Entity {
@@ -106,11 +118,12 @@ class GameScreen(private val game: GreatGame) : Screen {
 
         val bodyDef = BodyDef()
         bodyDef.type = BodyDef.BodyType.DynamicBody
+        // @TODO convert to meters
         val center = Vector3(Gdx.graphics.width/2f, Gdx.graphics.height/2f, 0f)
         bodyDef.position.set(center.x, center.y)
         val body = world.createBody(bodyDef)
         val circle = CircleShape()
-        circle.radius = 50f
+        circle.radius = 0.5f
         val fixtureDef = FixtureDef()
         fixtureDef.shape = circle
         fixtureDef.density = 1f
@@ -135,7 +148,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         bodyDef.position.set(center.x + x, center.y + y)
         val body = world.createBody(bodyDef)
         val circle = CircleShape()
-        circle.radius = 50f
+        circle.radius = 0.5f
         val fixtureDef = FixtureDef()
         fixtureDef.shape = circle
         fixtureDef.density = 1f
@@ -152,16 +165,18 @@ class GameScreen(private val game: GreatGame) : Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 //        game.batch.enableBlending()
+        gameCamera.update()
 
-        camera.update()
-        game.batch.projectionMatrix = camera.combined
-
-        mapRenderer.setView(camera)
+        hudViewport.apply()
+        mapRenderer.setView(hudCamera)
         mapRenderer.render()
 
+        game.batch.projectionMatrix = gameCamera.combined
+        gameViewport.apply() // not sure
         engine.update(delta)
 
-        // Why does stage have to go after engine update?
+        game.batch.projectionMatrix = hudCamera.combined
+        stage.viewport.apply()
         stage.act(delta)
         stage.draw()
 
@@ -169,8 +184,8 @@ class GameScreen(private val game: GreatGame) : Screen {
     }
 
     override fun resize(width: Int, height: Int) {
-        viewport.update(width, height)
-        camera.setToOrtho(false)
+        hudViewport.update(width, height, true)
+        gameViewport.update(width, height, false)
     }
 
     override fun show() {
