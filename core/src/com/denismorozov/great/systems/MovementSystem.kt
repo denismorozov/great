@@ -1,6 +1,5 @@
 package com.denismorozov.great.systems
 
-
 import com.badlogic.ashley.core.ComponentMapper
 import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family

@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.badlogic.gdx.physics.box2d.World
 
-
 class PhysicsDebugSystem(private val world: World, private val camera: OrthographicCamera) : IteratingSystem(
         Family.all().get()
 ) {

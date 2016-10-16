@@ -10,7 +10,6 @@ import com.badlogic.gdx.utils.Array
 import com.denismorozov.great.components.BodyComponent
 import com.denismorozov.great.components.TransformComponent
 
-
 class PhysicsSystem(private val world: World) : IteratingSystem(
         Family.all(BodyComponent::class.java, TransformComponent::class.java).get()
 ) {

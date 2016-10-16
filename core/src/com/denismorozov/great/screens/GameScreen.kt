@@ -4,6 +4,7 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.Screen
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
@@ -17,6 +18,7 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.box2d.*
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.viewport.FitViewport
+import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.denismorozov.great.GreatGame
 import com.denismorozov.great.components.*
 import com.denismorozov.great.input.Joystick
@@ -24,7 +26,7 @@ import com.denismorozov.great.systems.*
 
 class GameScreen(private val game: GreatGame) : Screen {
     private val hudCamera: OrthographicCamera
-    private val hudViewport: FitViewport
+    private val hudViewport: ScreenViewport
     private val gameCamera: OrthographicCamera
     private val gameViewport: FitViewport
 
@@ -35,6 +37,9 @@ class GameScreen(private val game: GreatGame) : Screen {
 
     private val stage: Stage
     private val world: World
+
+    private val playerTexture: Texture
+    private val enemyTexture: Texture
 
     companion object {
         val screenWidth: Int
@@ -47,22 +52,25 @@ class GameScreen(private val game: GreatGame) : Screen {
 
     init {
         hudCamera = OrthographicCamera()
-        hudViewport = FitViewport(screenWidth.toFloat(), screenHeight.toFloat(), hudCamera)
+        hudViewport = ScreenViewport(hudCamera)
         hudViewport.apply(true)
         stage = Stage(hudViewport, game.batch)
         stage.addActor(Joystick.touchpad)
-        Gdx.input.inputProcessor = stage
+        //stage.addActor()
+        val inputMultiplexer = InputMultiplexer(stage)
+        Gdx.input.inputProcessor = inputMultiplexer
 
         gameCamera = OrthographicCamera()
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
         gameViewport.apply(false)
 
         map = TmxMapLoader().load("map.tmx")
-        val someArbitraryScaleThatLooksGood = 1f/30f
+        val someArbitraryScaleThatLooksGood = 1f/30f // @TODO
         mapRenderer = OrthogonalTiledMapRenderer(map, someArbitraryScaleThatLooksGood)
 
         world = World(Vector2(0f, 0f), false)
 
+        // @TODO Finish configuring pooled engine, making components poolable, etc
         engine = PooledEngine()
 
         engine.addSystem(MovementSystem(gameCamera))
@@ -70,6 +78,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         engine.addSystem(PhysicsSystem(world))
         engine.addSystem(PhysicsDebugSystem(world, gameCamera))
 
+        playerTexture = Texture(Gdx.files.internal("player.png"))
+        enemyTexture = Texture(Gdx.files.internal("enemy.png"))
         engine.addEntity(createPlayer())
         engine.addEntity(createEnemy(1f, 1f))
         engine.addEntity(createEnemy(1f, -1f))
@@ -82,7 +92,7 @@ class GameScreen(private val game: GreatGame) : Screen {
 
         player
             .add(PlayerComponent())
-            .add(TextureComponent(Texture(Gdx.files.internal("player.png"))))
+            .add(TextureComponent(playerTexture))
             .add(TransformComponent())
 
         val bodyDef = BodyDef()
@@ -107,7 +117,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         val enemy = engine.createEntity()
 
         enemy
-            .add(TextureComponent(Texture(Gdx.files.internal("enemy.png"))))
+            .add(TextureComponent(enemyTexture))
             .add(TransformComponent())
 
         val bodyDef = BodyDef()
@@ -133,7 +143,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 
-        hudViewport.apply()
+
         mapRenderer.setView(gameCamera)
         mapRenderer.render()
 
@@ -169,6 +179,8 @@ class GameScreen(private val game: GreatGame) : Screen {
     override fun dispose() {
         map.dispose()
         world.dispose()
+        playerTexture.dispose()
+        enemyTexture.dispose()
 //        SoundManager.dispose()
     }
 }
