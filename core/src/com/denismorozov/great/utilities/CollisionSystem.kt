@@ -8,6 +8,7 @@ import com.badlogic.gdx.physics.box2d.*
 import com.denismorozov.great.components.EnemyComponent
 import com.denismorozov.great.components.PlayerComponent
 import com.denismorozov.great.components.SpellComponent
+import com.denismorozov.great.systems.EnemyPathfinding
 
 class CollisionSystem (val engine: Engine, val collisionListeners: List<CollisionListener>) : ContactListener {
     private val spellM = ComponentMapper.getFor(SpellComponent::class.java)
@@ -29,6 +30,8 @@ class CollisionSystem (val engine: Engine, val collisionListeners: List<Collisio
             Gdx.app.log("spell system", "enemy collision")
             if (spell !== null) {
                 Gdx.app.log("spell system", "spell collision")
+                val chasing = engine.getSystem(EnemyPathfinding::class.java)
+                chasing.setProcessing(true)
                 engine.removeEntity(enemy)
             }
         }

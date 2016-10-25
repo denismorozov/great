@@ -80,16 +80,21 @@ class GameScreen(private val game: GreatGame) : Screen {
         engine.addSystem(RenderingSystem(game.batch))
         engine.addSystem(PhysicsSystem(world))
         engine.addSystem(PhysicsDebugSystem(world, gameCamera))
+        val chasing = EnemyPathfinding()
+        chasing.setProcessing(false)
+        engine.addSystem(chasing)
 
         engine.addEntityListener(PhysicsEntityListener(world))
 
         playerTexture = Texture(Gdx.files.internal("player.png"))
         enemyTexture = Texture(Gdx.files.internal("enemy.png"))
+
         engine.addEntity(createPlayer())
-        engine.addEntity(createEnemy(1f, 1f))
-        engine.addEntity(createEnemy(1f, -1f))
-        engine.addEntity(createEnemy(-1f, 1f))
-        engine.addEntity(createEnemy(-1f, -1f))
+        for (i in -10..10 step 2) {
+            engine.addEntity(createEnemy(3f, i.toFloat() + .1f))
+            engine.addEntity(createEnemy(3f, i.toFloat()))
+            engine.addEntity(createEnemy(-3f, i.toFloat()))
+        }
 
         val touchInput = Touch(gameCamera, engine, world)
         val inputMultiplexer = InputMultiplexer(stage, touchInput)

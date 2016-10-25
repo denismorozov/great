@@ -21,7 +21,7 @@ class MovementSystem(val camera: Camera) : IteratingSystem(
         val body = bodyM.get(entity).body
         val currentVelocity = body.linearVelocity
 
-        val maxVelocity = 1.25f
+        val maxVelocity = 1.5f
         val desiredVelocityX = maxVelocity * Joystick.X
         val desiredVelocityY = maxVelocity * Joystick.Y
         val velocityChangeX = desiredVelocityX - currentVelocity.x
