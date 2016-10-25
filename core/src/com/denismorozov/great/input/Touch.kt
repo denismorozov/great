@@ -12,10 +12,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.World
-import com.denismorozov.great.components.BodyComponent
-import com.denismorozov.great.components.PlayerComponent
-import com.denismorozov.great.components.TextureComponent
-import com.denismorozov.great.components.TransformComponent
+import com.denismorozov.great.components.*
 
 class Touch (val camera: OrthographicCamera, val engine: PooledEngine, val world: World) : InputProcessor {
     private val spellTexture: Texture
@@ -27,7 +24,7 @@ class Touch (val camera: OrthographicCamera, val engine: PooledEngine, val world
 
     override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
         val gameCoordinates = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
-        createSpell(gameCoordinates)
+        engine.addEntity(createSpell(gameCoordinates))
         return true
     }
 
@@ -47,6 +44,7 @@ class Touch (val camera: OrthographicCamera, val engine: PooledEngine, val world
         val playerBody = bodyM.get(player).body
 
         spell
+            .add(SpellComponent())
             .add(TextureComponent(spellTexture))
             .add(TransformComponent())
 
@@ -60,7 +58,9 @@ class Touch (val camera: OrthographicCamera, val engine: PooledEngine, val world
         fixtureDef.shape = circle
         fixtureDef.density = 1f
         fixtureDef.restitution = 0.2f
+        fixtureDef.isSensor = true
         body.createFixture(fixtureDef)
+        body.userData = spell
         circle.dispose()
         body.linearVelocity = Vector2(gameCoordinates.x - playerBody.position.x, gameCoordinates.y - playerBody.position.y)
         spell.add(BodyComponent(body))

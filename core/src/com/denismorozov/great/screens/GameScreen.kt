@@ -24,6 +24,10 @@ import com.denismorozov.great.components.*
 import com.denismorozov.great.input.Joystick
 import com.denismorozov.great.input.Touch
 import com.denismorozov.great.systems.*
+import com.denismorozov.great.utilities.CollisionListener
+import com.denismorozov.great.utilities.CollisionSystem
+import com.denismorozov.great.utilities.PhysicsEntityListener
+import java.util.*
 
 class GameScreen(private val game: GreatGame) : Screen {
     private val hudCamera: OrthographicCamera
@@ -77,6 +81,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         engine.addSystem(PhysicsSystem(world))
         engine.addSystem(PhysicsDebugSystem(world, gameCamera))
 
+        engine.addEntityListener(PhysicsEntityListener(world))
+
         playerTexture = Texture(Gdx.files.internal("player.png"))
         enemyTexture = Texture(Gdx.files.internal("enemy.png"))
         engine.addEntity(createPlayer())
@@ -88,6 +94,10 @@ class GameScreen(private val game: GreatGame) : Screen {
         val touchInput = Touch(gameCamera, engine, world)
         val inputMultiplexer = InputMultiplexer(stage, touchInput)
         Gdx.input.inputProcessor = inputMultiplexer
+
+        val collisionListeners = ArrayList<CollisionListener>()
+        val collisionSystem = CollisionSystem(engine, collisionListeners)
+        world.setContactListener(collisionSystem)
     }
 
     private fun createPlayer(): Entity {
@@ -110,6 +120,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         fixtureDef.density = 1f
         fixtureDef.restitution = 0.2f
         body.createFixture(fixtureDef)
+        body.userData = player
+//        body.userData = "player"
         circle.dispose()
         player.add(BodyComponent(body))
 
@@ -120,6 +132,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         val enemy = engine.createEntity()
 
         enemy
+            .add(EnemyComponent())
             .add(TextureComponent(enemyTexture))
             .add(TransformComponent())
 
@@ -135,6 +148,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         fixtureDef.density = 1f
         fixtureDef.restitution = 0.2f
         body.createFixture(fixtureDef)
+        body.userData = enemy
+//        body.userData = "enemy"
         circle.dispose()
         enemy.add(BodyComponent(body))
 

@@ -5,15 +5,15 @@ import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.utils.Array
 import com.denismorozov.great.components.TextureComponent
 import com.denismorozov.great.components.TransformComponent
+import java.util.*
 
 
 class RenderingSystem(private val batch: SpriteBatch) : IteratingSystem(
         Family.all(TransformComponent::class.java, TextureComponent::class.java).get()
 ) {
-    private val renderQueue = Array<Entity>()
+    private val renderQueue = ArrayList<Entity>()
 
     private val textureM = ComponentMapper.getFor(TextureComponent::class.java)
     private val transformM = ComponentMapper.getFor(TransformComponent::class.java)
