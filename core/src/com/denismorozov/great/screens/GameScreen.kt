@@ -1,6 +1,6 @@
 package com.denismorozov.great.screens
 
-import com.badlogic.ashley.core.Entity
+import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
@@ -14,18 +14,20 @@ import com.badlogic.gdx.maps.tiled.TiledMapRenderer
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.physics.box2d.*
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.denismorozov.great.GreatGame
 import com.denismorozov.great.components.*
+import com.denismorozov.great.entities.createEnemy
+import com.denismorozov.great.entities.createPlayer
 import com.denismorozov.great.input.Joystick
 import com.denismorozov.great.input.Touch
 import com.denismorozov.great.systems.*
 import com.denismorozov.great.utilities.CollisionListener
 import com.denismorozov.great.utilities.CollisionSystem
+import com.denismorozov.great.utilities.CounterListener
 import com.denismorozov.great.utilities.PhysicsEntityListener
 import java.util.*
 
@@ -36,6 +38,7 @@ class GameScreen(private val game: GreatGame) : Screen {
     private val gameViewport: FitViewport
 
     private val engine: PooledEngine
+    private val enemyCounter: CounterListener
 
     private val map: TiledMap
     private val mapRenderer: TiledMapRenderer
@@ -61,7 +64,6 @@ class GameScreen(private val game: GreatGame) : Screen {
         hudViewport.apply(true)
         stage = Stage(hudViewport, game.batch)
         stage.addActor(Joystick.touchpad)
-        //stage.addActor()
 
         gameCamera = OrthographicCamera()
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
@@ -84,16 +86,20 @@ class GameScreen(private val game: GreatGame) : Screen {
         chasing.setProcessing(false)
         engine.addSystem(chasing)
 
+        enemyCounter = CounterListener()
+        val enemyFamily = Family.all(EnemyComponent::class.java).get()
+        engine.addEntityListener(enemyFamily, enemyCounter)
         engine.addEntityListener(PhysicsEntityListener(world))
+
 
         playerTexture = Texture(Gdx.files.internal("player.png"))
         enemyTexture = Texture(Gdx.files.internal("enemy.png"))
 
-        engine.addEntity(createPlayer())
+        engine.addEntity(createPlayer(engine, world, playerTexture))
         for (i in -10..10 step 2) {
-            engine.addEntity(createEnemy(3f, i.toFloat() + .1f))
-            engine.addEntity(createEnemy(3f, i.toFloat()))
-            engine.addEntity(createEnemy(-3f, i.toFloat()))
+            engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat() + .1f))
+            engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat()))
+            engine.addEntity(createEnemy(engine, world, enemyTexture, -3f, i.toFloat()))
         }
 
         val touchInput = Touch(gameCamera, engine, world)
@@ -105,67 +111,10 @@ class GameScreen(private val game: GreatGame) : Screen {
         world.setContactListener(collisionSystem)
     }
 
-    private fun createPlayer(): Entity {
-        val player = engine.createEntity()
-
-        player
-            .add(PlayerComponent())
-            .add(TextureComponent(playerTexture))
-            .add(TransformComponent())
-
-        val bodyDef = BodyDef()
-        bodyDef.type = BodyDef.BodyType.DynamicBody
-        val center = Vector3(worldWidth/2f, worldHeight/2f, 0f)
-        bodyDef.position.set(center.x, center.y)
-        val body = world.createBody(bodyDef)
-        val circle = CircleShape()
-        circle.radius = 0.5f
-        val fixtureDef = FixtureDef()
-        fixtureDef.shape = circle
-        fixtureDef.density = 1f
-        fixtureDef.restitution = 0.2f
-        body.createFixture(fixtureDef)
-        body.userData = player
-//        body.userData = "player"
-        circle.dispose()
-        player.add(BodyComponent(body))
-
-        return player
-    }
-
-    private fun createEnemy(x: Float, y:Float): Entity {
-        val enemy = engine.createEntity()
-
-        enemy
-            .add(EnemyComponent())
-            .add(TextureComponent(enemyTexture))
-            .add(TransformComponent())
-
-        val bodyDef = BodyDef()
-        bodyDef.type = BodyDef.BodyType.DynamicBody
-        val center = Vector3(worldWidth/2f, worldHeight/2f, 0f)
-        bodyDef.position.set(center.x + x, center.y + y)
-        val body = world.createBody(bodyDef)
-        val circle = CircleShape()
-        circle.radius = 0.5f
-        val fixtureDef = FixtureDef()
-        fixtureDef.shape = circle
-        fixtureDef.density = 1f
-        fixtureDef.restitution = 0.2f
-        body.createFixture(fixtureDef)
-        body.userData = enemy
-//        body.userData = "enemy"
-        circle.dispose()
-        enemy.add(BodyComponent(body))
-
-        return enemy
-    }
-
     override fun render(delta: Float) {
         Gdx.gl.glClearColor(0f, 0f, 0.1f, 1f) // rgba
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
-
 
         mapRenderer.setView(gameCamera)
         mapRenderer.render()
@@ -179,6 +128,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         stage.act(delta)
         stage.draw()
 
+//        Gdx.app.log("Enemy counter", enemyCounter.entityCount.toString())
         if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) Gdx.app.exit()
     }
 
@@ -204,6 +154,5 @@ class GameScreen(private val game: GreatGame) : Screen {
         world.dispose()
         playerTexture.dispose()
         enemyTexture.dispose()
-//        SoundManager.dispose()
     }
 }

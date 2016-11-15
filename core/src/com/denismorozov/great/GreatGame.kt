@@ -4,7 +4,7 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.denismorozov.great.screens.GameScreen
+import com.denismorozov.great.screens.MainMenuScreen
 
 class GreatGame : Game() {
     internal lateinit var batch: SpriteBatch
@@ -15,7 +15,7 @@ class GreatGame : Game() {
         font = BitmapFont() // Arial
         font.data.setScale(2f)
         font.color = Color.CYAN
-        setScreen(GameScreen(this))
+        setScreen(MainMenuScreen(this))
     }
 
     override fun render() {
