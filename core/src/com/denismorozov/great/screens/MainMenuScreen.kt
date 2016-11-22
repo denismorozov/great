@@ -66,12 +66,19 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
         mainTable.center()
 
         // Create a button with the "default" TextButtonStyle. A 3rd parameter can be used to specify a name other than "default".
-        val playButton = TextButton("Play", textButtonStyle)
+        val gameIsRunning = game.gameScreen !== null
+        val playButton = TextButton(
+            if (gameIsRunning) "Resume" else "Play",
+            textButtonStyle
+        )
         val exitButton = TextButton("Exit", textButtonStyle)
 
         playButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
-                game.screen = GameScreen(game)
+                if (!gameIsRunning) {
+                    game.gameScreen = GameScreen(game)
+                }
+                game.screen = game.gameScreen
             }
         })
 
