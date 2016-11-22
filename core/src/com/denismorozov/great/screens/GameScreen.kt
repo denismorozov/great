@@ -42,8 +42,8 @@ class GameScreen(private val game: GreatGame) : Screen {
     private val engine: PooledEngine
     private val enemyCounter: CounterListener
 
-    private val map: TiledMap
-    private val mapRenderer: TiledMapRenderer
+//    private val map: TiledMap
+//    private val mapRenderer: TiledMapRenderer
 
     private val stage: Stage
     private val world: World
@@ -93,9 +93,9 @@ class GameScreen(private val game: GreatGame) : Screen {
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
         gameViewport.apply(false)
 
-        map = TmxMapLoader().load("map.tmx")
-        val someArbitraryScaleThatLooksGood = 1f/30f // @TODO
-        mapRenderer = OrthogonalTiledMapRenderer(map, someArbitraryScaleThatLooksGood)
+//        map = TmxMapLoader().load("map.tmx")
+//        val someArbitraryScaleThatLooksGood = 1f/30f // @TODO
+//        mapRenderer = OrthogonalTiledMapRenderer(map, someArbitraryScaleThatLooksGood)
 
         world = World(Vector2(0f, 0f), false)
 
@@ -133,6 +133,9 @@ class GameScreen(private val game: GreatGame) : Screen {
         // reset player position
 
         for (i in -10..10 step 2) {
+            // waveNumber x 10 amount of enemies
+            // spawn along border
+            // delay turning on pathfinding
             engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat() + .1f))
             engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat()))
             engine.addEntity(createEnemy(engine, world, enemyTexture, -3f, i.toFloat()))
@@ -144,8 +147,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 
-        mapRenderer.setView(gameCamera)
-        mapRenderer.render()
+//        mapRenderer.setView(gameCamera)
+//        mapRenderer.render()
 
         game.batch.projectionMatrix = gameCamera.combined
         gameViewport.apply()
@@ -185,7 +188,7 @@ class GameScreen(private val game: GreatGame) : Screen {
     }
 
     override fun dispose() {
-        map.dispose()
+//        map.dispose()
         world.dispose()
         playerTexture.dispose()
         enemyTexture.dispose()
