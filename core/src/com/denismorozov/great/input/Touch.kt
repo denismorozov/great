@@ -24,7 +24,11 @@ class Touch (val camera: OrthographicCamera, val engine: PooledEngine, val world
 
     override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
         val gameCoordinates = camera.unproject(Vector3(screenX.toFloat(), screenY.toFloat(), 0f))
-        engine.addEntity(createSpell(gameCoordinates))
+        val family = Family.all(PlayerComponent::class.java).get()
+        val player = engine.getEntitiesFor(family).firstOrNull()
+        if (player !== null) {
+            engine.addEntity(createSpell(gameCoordinates, player))
+        }
         return true
     }
 
@@ -36,11 +40,9 @@ class Touch (val camera: OrthographicCamera, val engine: PooledEngine, val world
         return false
     }
 
-    private fun createSpell(gameCoordinates: Vector3): Entity {
+    private fun createSpell(gameCoordinates: Vector3, player: Entity): Entity {
         val spell = engine.createEntity()
 
-        val family = Family.all(PlayerComponent::class.java).get()
-        val player = engine.getEntitiesFor(family).first()
         val playerBody = bodyM.get(player).body
 
         spell

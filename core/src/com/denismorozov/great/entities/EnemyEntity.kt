@@ -19,7 +19,7 @@ fun createEnemy(engine: PooledEngine, world: World, enemyTexture: Texture, x: Fl
 
     enemy
         .add(EnemyComponent())
-        .add(TextureComponent(enemyTexture))
+//        .add(TextureComponent(enemyTexture))
         .add(TransformComponent())
 
     val bodyDef = BodyDef()

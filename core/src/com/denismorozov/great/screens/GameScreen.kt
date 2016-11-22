@@ -1,5 +1,6 @@
 package com.denismorozov.great.screens
 
+import com.badlogic.ashley.core.Entity
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.Gdx
@@ -15,9 +16,12 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.*
+import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.denismorozov.great.GreatGame
@@ -32,6 +36,7 @@ import com.denismorozov.great.utilities.CollisionSystem
 import com.denismorozov.great.utilities.CounterListener
 import com.denismorozov.great.utilities.PhysicsEntityListener
 import java.util.*
+import java.util.concurrent.ThreadLocalRandom
 
 class GameScreen(private val game: GreatGame) : Screen {
     private val hudCamera: OrthographicCamera
@@ -45,6 +50,7 @@ class GameScreen(private val game: GreatGame) : Screen {
 //    private val map: TiledMap
 //    private val mapRenderer: TiledMapRenderer
 
+    private val inputMultiplexer: InputMultiplexer
     private val stage: Stage
     private val world: World
 
@@ -78,16 +84,29 @@ class GameScreen(private val game: GreatGame) : Screen {
         enemyCounterLabel = Label("", labelStyle)
         enemyCounterLabel.color = Color.RED
         enemyCounterLabel.setFontScale(Gdx.graphics.density)
+        val menuLabel = Label("Menu", labelStyle)
+        menuLabel.color = Color.GREEN
+        menuLabel.setFontScale(Gdx.graphics.density)
+        menuLabel.addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent, x: Float, y: Float) {
+                game.screen = game.menuScreen
+            }
+        })
         table = Table()
         table.setFillParent(true)
 //        table.debugTable()
         table.top()
-        table.row().fillX()
-        table.add(waveCounterLabel).width(screenWidth/2f)
-        table.add(enemyCounterLabel).width(screenWidth/2f)
+        table
+            .add(waveCounterLabel)
+            .width(screenWidth* 1/2f)
+        table
+            .add(enemyCounterLabel)
+            .width(screenWidth * 7/16f)
+        table
+            .add(menuLabel)
+            .width(screenWidth * 1/16f)
         stage.addActor(table)
         stage.addActor(Joystick.touchpad)
-
 
         gameCamera = OrthographicCamera()
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
@@ -107,7 +126,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         engine.addSystem(PhysicsSystem(world))
         engine.addSystem(PhysicsDebugSystem(world, gameCamera))
         val chasing = EnemyPathfinding() //consider adding later
-        chasing.setProcessing(false)
+//        chasing.setProcessing(false)
         engine.addSystem(chasing)
 
         enemyCounter = CounterListener()
@@ -119,26 +138,32 @@ class GameScreen(private val game: GreatGame) : Screen {
         enemyTexture = Texture(Gdx.files.internal("enemy.png"))
 
         val touchInput = Touch(gameCamera, engine, world)
-        val inputMultiplexer = InputMultiplexer(stage, touchInput)
+        inputMultiplexer = InputMultiplexer(stage, touchInput)
         Gdx.input.inputProcessor = inputMultiplexer
 
         val collisionListeners = ArrayList<CollisionListener>()
         val collisionSystem = CollisionSystem(engine, collisionListeners)
         world.setContactListener(collisionSystem)
-
-        engine.addEntity(createPlayer(engine, world, playerTexture))
     }
 
     fun initializeWave(waveNumber: Int = 1) {
-        // reset player position
+        engine.removeAllEntities()
+        engine.addEntity(createPlayer(engine, world, playerTexture))
 
-        for (i in -10..10 step 2) {
-            // waveNumber x 10 amount of enemies
-            // spawn along border
-            // delay turning on pathfinding
-            engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat() + .1f))
-            engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat()))
-            engine.addEntity(createEnemy(engine, world, enemyTexture, -3f, i.toFloat()))
+        val numEnemies = waveNumber * 10
+        val random = Random()
+        val timer = Timer()
+        for (i in 1..numEnemies) {
+            val r = random.nextFloat()
+            val x = worldWidth * r
+            val y = if (r > 0.5) worldHeight else -worldHeight
+            val enemy = createEnemy(engine, world, enemyTexture, x, y)
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    enemy.add(TextureComponent(enemyTexture))
+                }
+            }, (1000 * 5 * r).toLong())
+            engine.addEntity(enemy)
         }
     }
 
@@ -176,12 +201,18 @@ class GameScreen(private val game: GreatGame) : Screen {
     }
 
     override fun show() {
+        Gdx.input.inputProcessor = inputMultiplexer
+        if (waveCount > 0) {
+            engine.systems.forEach { it.setProcessing(true) }
+        }
     }
 
     override fun hide() {
+        engine.systems.forEach { it.setProcessing(false) }
     }
 
     override fun pause() {
+
     }
 
     override fun resume() {

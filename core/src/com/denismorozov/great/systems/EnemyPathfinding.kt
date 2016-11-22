@@ -9,9 +9,10 @@ import com.badlogic.gdx.utils.Array
 import com.denismorozov.great.components.BodyComponent
 import com.denismorozov.great.components.EnemyComponent
 import com.denismorozov.great.components.PlayerComponent
+import com.denismorozov.great.components.TextureComponent
 
 class EnemyPathfinding() : IteratingSystem(
-        Family.all(EnemyComponent::class.java).get()
+        Family.all(EnemyComponent::class.java, TextureComponent::class.java).get()
 ) {
     private val bodiesQueue = Array<Entity>()
     private val bodyM = ComponentMapper.getFor(BodyComponent::class.java)
@@ -21,14 +22,16 @@ class EnemyPathfinding() : IteratingSystem(
         super.update(deltaTime)
 
         val family = Family.all(PlayerComponent::class.java).get()
-        val player = engine.getEntitiesFor(family).first()
-        val playerBody = bodyM.get(player).body
+        val player = engine.getEntitiesFor(family).firstOrNull()
 
-        for (entity in bodiesQueue) {
-            val body = bodyM.get(entity).body
-            val diffX = playerBody.position.x - body.position.x
-            val diffY = playerBody.position.y - body.position.y
-            body.linearVelocity = Vector2(diffX, diffY).scl(0.5f)
+        if (player !== null) {
+            val playerBody = bodyM.get(player).body
+            for (entity in bodiesQueue) {
+                val body = bodyM.get(entity).body
+                val diffX = playerBody.position.x - body.position.x
+                val diffY = playerBody.position.y - body.position.y
+                body.linearVelocity = Vector2(diffX, diffY).scl(0.5f)
+            }
         }
 
         bodiesQueue.clear()

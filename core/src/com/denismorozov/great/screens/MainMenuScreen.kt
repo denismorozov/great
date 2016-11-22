@@ -31,7 +31,6 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
         pixmap.setColor(Color.GREEN)
         pixmap.fill()
         skin.add("white", Texture(pixmap))
-
         skin.add("default", game.font)
 
         textButtonStyle = TextButtonStyle()
@@ -47,8 +46,6 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
         viewport = ScreenViewport(camera)
         viewport.apply(true)
         stage = Stage(viewport, batch)
-
-        Gdx.input.inputProcessor = stage
     }
 
     override fun render(delta: Float) {
@@ -60,6 +57,8 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
     }
 
     override fun show() {
+        Gdx.input.inputProcessor = stage
+
         val mainTable = Table()
         mainTable.setFillParent(true)
         mainTable.center()
@@ -67,11 +66,9 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
         // Create a button with the "default" TextButtonStyle. A 3rd parameter can be used to specify a name other than "default".
         val gameIsRunning = game.gameScreen !== null
         val playButton = TextButton(
-            if (gameIsRunning) "Resume" else "Play",
+            if (gameIsRunning) "Continue" else "New Game",
             textButtonStyle
         )
-        val exitButton = TextButton("Exit", textButtonStyle)
-
         playButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
                 if (!gameIsRunning) {
@@ -81,6 +78,7 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
             }
         })
 
+        val exitButton = TextButton("Exit", textButtonStyle)
         exitButton.addListener(object : ClickListener() {
             override fun clicked(event: InputEvent, x: Float, y: Float) {
                 Gdx.app.exit()
@@ -89,6 +87,19 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
 
         mainTable.add(playButton).width(camera.viewportWidth/2f).space(10f)
         mainTable.row()
+
+        if (gameIsRunning) {
+            val restartButton = TextButton("Restart", textButtonStyle)
+            restartButton.addListener(object : ClickListener() {
+                override fun clicked(event: InputEvent, x: Float, y: Float) {
+                    game.gameScreen?.dispose()
+                    game.gameScreen = GameScreen(game)
+                    game.screen = game.gameScreen
+                }
+            })
+            mainTable.add(restartButton).width(camera.viewportWidth/2f).space(10f)
+            mainTable.row()
+        }
         mainTable.add(exitButton).width(camera.viewportWidth/2f).space(10f)
         stage.addActor(mainTable)
     }
@@ -98,6 +109,7 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
     }
 
     override fun hide() {
+        stage.clear()
     }
 
     override fun pause() {
