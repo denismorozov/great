@@ -5,6 +5,7 @@ import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Texture
@@ -15,6 +16,8 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.*
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.denismorozov.great.GreatGame
@@ -48,6 +51,12 @@ class GameScreen(private val game: GreatGame) : Screen {
     private val playerTexture: Texture
     private val enemyTexture: Texture
 
+    private val enemyCounterLabel: Label
+    private val waveCounterLabel: Label
+
+    private val table: Table
+    private var waveCount = 0
+
     companion object {
         val screenWidth: Int
             get() = Gdx.graphics.width
@@ -62,7 +71,23 @@ class GameScreen(private val game: GreatGame) : Screen {
         hudViewport = ScreenViewport(hudCamera)
         hudViewport.apply(true)
         stage = Stage(hudViewport, game.batch)
+        val labelStyle = Label.LabelStyle(game.font, Color.WHITE)
+        waveCounterLabel = Label(" Wave 0", labelStyle)
+        waveCounterLabel.color = Color.GREEN
+        waveCounterLabel.setFontScale(Gdx.graphics.density)
+        enemyCounterLabel = Label("", labelStyle)
+        enemyCounterLabel.color = Color.RED
+        enemyCounterLabel.setFontScale(Gdx.graphics.density)
+        table = Table()
+        table.setFillParent(true)
+//        table.debugTable()
+        table.top()
+        table.row().fillX()
+        table.add(waveCounterLabel).width(screenWidth/2f)
+        table.add(enemyCounterLabel).width(screenWidth/2f)
+        stage.addActor(table)
         stage.addActor(Joystick.touchpad)
+
 
         gameCamera = OrthographicCamera()
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
@@ -102,10 +127,11 @@ class GameScreen(private val game: GreatGame) : Screen {
         world.setContactListener(collisionSystem)
 
         engine.addEntity(createPlayer(engine, world, playerTexture))
-        initializeWave()
     }
 
     fun initializeWave(waveNumber: Int = 1) {
+        // reset player position
+
         for (i in -10..10 step 2) {
             engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat() + .1f))
             engine.addEntity(createEnemy(engine, world, enemyTexture, 3f, i.toFloat()))
@@ -130,9 +156,14 @@ class GameScreen(private val game: GreatGame) : Screen {
         stage.act(delta)
         stage.draw()
 
-//        Gdx.app.log("Enemy counter", enemyCounter.entityCount.toString())
         if (enemyCounter.entityCount === 0) {
-            initializeWave()
+            enemyCounterLabel.isVisible = false
+            waveCount++
+            waveCounterLabel.setText(" Wave $waveCount")
+            initializeWave(waveCount)
+        } else {
+            enemyCounterLabel.isVisible = true
+            enemyCounterLabel.setText(enemyCounter.entityCount.toString())
         }
     }
 

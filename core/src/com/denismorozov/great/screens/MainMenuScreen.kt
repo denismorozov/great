@@ -32,8 +32,7 @@ class MainMenuScreen(private val game: GreatGame) : Screen {
         pixmap.fill()
         skin.add("white", Texture(pixmap))
 
-        val font = BitmapFont()
-        skin.add("default", font)
+        skin.add("default", game.font)
 
         textButtonStyle = TextButtonStyle()
         textButtonStyle.up = skin.newDrawable("white", Color.DARK_GRAY)

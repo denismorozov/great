@@ -1,6 +1,7 @@
 package com.denismorozov.great
 
 import com.badlogic.gdx.Game
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -17,8 +18,8 @@ class GreatGame : Game() {
     override fun create() {
         batch = SpriteBatch()
         font = BitmapFont() // Arial
-        font.data.setScale(2f)
-        font.color = Color.CYAN
+        font.data.setScale(Gdx.graphics.density)
+        font.color = Color.WHITE
 
         // create screens
         menuScreen = MainMenuScreen(this)
@@ -32,5 +33,7 @@ class GreatGame : Game() {
     override fun dispose() {
         batch.dispose()
         font.dispose()
+        menuScreen.dispose()
+        gameScreen?.dispose()
     }
 }
