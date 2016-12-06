@@ -21,7 +21,6 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
-import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.denismorozov.great.GreatGame
@@ -36,7 +35,6 @@ import com.denismorozov.great.utilities.CollisionSystem
 import com.denismorozov.great.utilities.CounterListener
 import com.denismorozov.great.utilities.PhysicsEntityListener
 import java.util.*
-import java.util.concurrent.ThreadLocalRandom
 
 class GameScreen(private val game: GreatGame) : Screen {
     private val hudCamera: OrthographicCamera
@@ -46,6 +44,7 @@ class GameScreen(private val game: GreatGame) : Screen {
 
     private val engine: PooledEngine
     private val enemyCounter: CounterListener
+    private val spellSystem: SpellSystem
 
 //    private val map: TiledMap
 //    private val mapRenderer: TiledMapRenderer
@@ -59,6 +58,7 @@ class GameScreen(private val game: GreatGame) : Screen {
 
     private val enemyCounterLabel: Label
     private val waveCounterLabel: Label
+    private val resourceCounterLabel: Label
 
     private val table: Table
     private var waveCount = 0
@@ -84,6 +84,10 @@ class GameScreen(private val game: GreatGame) : Screen {
         enemyCounterLabel = Label("", labelStyle)
         enemyCounterLabel.color = Color.RED
         enemyCounterLabel.setFontScale(Gdx.graphics.density)
+        resourceCounterLabel = Label("3", labelStyle)
+        resourceCounterLabel.color = Color.BLUE
+        resourceCounterLabel.setFontScale(Gdx.graphics.density * 2)
+        resourceCounterLabel.setPosition(screenWidth * 15/16f, screenHeight * 1/2f)
         val menuLabel = Label("Menu", labelStyle)
         menuLabel.color = Color.GREEN
         menuLabel.setFontScale(Gdx.graphics.density)
@@ -105,8 +109,10 @@ class GameScreen(private val game: GreatGame) : Screen {
         table
             .add(menuLabel)
             .width(screenWidth * 1/16f)
+        table.row()
         stage.addActor(table)
         stage.addActor(Joystick.touchpad)
+        stage.addActor(resourceCounterLabel)
 
         gameCamera = OrthographicCamera()
         gameViewport = FitViewport(worldWidth, worldHeight, gameCamera)
@@ -121,7 +127,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         // @TODO Finish configuring pooled engine, making components poolable, etc
         engine = PooledEngine()
 
-        val spellSystem = SpellSystem(world)
+        spellSystem = SpellSystem(world)
         engine.addSystem(spellSystem)
         engine.addSystem(MovementSystem(gameCamera))
         engine.addSystem(RenderingSystem(game.batch))
@@ -169,7 +175,7 @@ class GameScreen(private val game: GreatGame) : Screen {
     }
 
     override fun render(delta: Float) {
-        Gdx.gl.glClearColor(0f, 0f, 0.1f, 1f) // rgba
+        Gdx.gl.glClearColor(0f, 0f, 0.0f, 1f) // rgba
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
 
@@ -184,6 +190,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         stage.viewport.apply()
         stage.act(delta)
         stage.draw()
+
+        resourceCounterLabel.setText(spellSystem.ballCharges.toString())
 
         if (enemyCounter.entityCount === 0) {
             enemyCounterLabel.isVisible = false
