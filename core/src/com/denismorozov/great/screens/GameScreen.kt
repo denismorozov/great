@@ -121,6 +121,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         // @TODO Finish configuring pooled engine, making components poolable, etc
         engine = PooledEngine()
 
+        val spellSystem = SpellSystem(world)
+        engine.addSystem(spellSystem)
         engine.addSystem(MovementSystem(gameCamera))
         engine.addSystem(RenderingSystem(game.batch))
         engine.addSystem(PhysicsSystem(world))
@@ -137,7 +139,7 @@ class GameScreen(private val game: GreatGame) : Screen {
         playerTexture = Texture(Gdx.files.internal("player.png"))
         enemyTexture = Texture(Gdx.files.internal("enemy.png"))
 
-        val touchInput = Touch(gameCamera, engine, world)
+        val touchInput = Touch(gameCamera, engine, spellSystem)
         inputMultiplexer = InputMultiplexer(stage, touchInput)
         Gdx.input.inputProcessor = inputMultiplexer
 
