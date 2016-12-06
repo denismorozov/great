@@ -13,55 +13,47 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.CircleShape
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.World
-import com.badlogic.gdx.utils.Array
 import com.denismorozov.great.components.*
+import java.util.*
 
 class SpellSystem(private val world: World) : IteratingSystem(
         Family.all(SpellComponent::class.java, PlayerComponent::class.java).get()
 ) {
-    private val spellTexture: Texture
+    private val spellTexture = Texture(Gdx.files.internal("spell.png"))
     private val bodyM = ComponentMapper.getFor(BodyComponent::class.java)
-
-    private val bodiesQueue = Array<Entity>()
 
     private val spellM = ComponentMapper.getFor(SpellComponent::class.java)
     private val playerM = ComponentMapper.getFor(PlayerComponent::class.java)
 
-    init {
-        spellTexture = Texture(Gdx.files.internal("spell.png"))
-    }
+    private val timer = Timer()
+
+    val maxBallCharges = 3
+    val maxBlinkCharges = 1
+
+    val ballRechargeRate = 1 // per second
 
     enum class Spell { BALL, BLINK }
     var selectedSpell: Spell = Spell.BALL
 
+    var ballCharges = maxBallCharges
+    var blinkCharges = maxBlinkCharges
+
+    var ballRecharging = false
+
+
     override fun update (deltaTime: Float) {
         super.update(deltaTime)
-
-//        val family = Family.all(PlayerComponent::class.java).get()
-//        val player = engine.getEntitiesFor(family).firstOrNull()
-//
-//        if (player !== null) {
-//            val playerBody = bodyM.get(player).body
-//            for (entity in bodiesQueue) {
-//                val body = bodyM.get(entity).body
-//                val diffX = playerBody.position.x - body.position.x
-//                val diffY = playerBody.position.y - body.position.y
-//                body.linearVelocity = Vector2(diffX, diffY).scl(0.5f)
-//            }
-//        }
-//
-//        bodiesQueue.clear()
     }
 
     override fun processEntity (entity: Entity, deltaTime: Float) {
-//        bodiesQueue.add(entity)
     }
 
     fun touchDown (gameCoordinates: Vector3, player: Entity) {
-        val spell = if (selectedSpell === Spell.BALL) {
+        val spell = if (selectedSpell === Spell.BALL && ballCharges > 0) {
             createBall(gameCoordinates, player)
         } else if (selectedSpell === Spell.BLINK){
-            teleport(gameCoordinates, player)
+            blink(gameCoordinates, player) // side effect
+            null
         } else {
             null
         }
@@ -79,6 +71,8 @@ class SpellSystem(private val world: World) : IteratingSystem(
     }
 
     private fun createBall (gameCoordinates: Vector3, player: Entity): Entity {
+        ballCharges--
+
         val spell = createSpell()
 
         val playerBody = bodyM.get(player).body
@@ -106,11 +100,47 @@ class SpellSystem(private val world: World) : IteratingSystem(
         spell.add(BodyComponent(body))
         spell.add(TextureComponent(spellTexture))
 
+        if (!ballRecharging) {
+            rechargeBalls()
+        }
+
         return spell
     }
 
-    private fun teleport (gameCoordinates: Vector3, player: Entity): Entity {
-        val spell = createSpell()
-        return spell
+    private fun rechargeBalls () {
+        ballRecharging = true
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                ballCharges++
+                if (ballCharges < maxBallCharges) {
+                    rechargeBalls()
+                } else {
+                    ballRecharging = false
+                }
+            }
+        }, (1000 * ballRechargeRate).toLong())
+    }
+
+    private fun blink (gameCoordinates: Vector3, player: Entity) {
+        blinkCharges--
+
+        val playerBody = bodyM.get(player).body
+
+        val movementSystem = engine.getSystem(MovementSystem::class.java)
+        movementSystem.setProcessing(false)
+
+//        Gdx.app.log("excuse me", gameCoordinates.toString())
+        Gdx.app.log("tp", playerBody.position.toString())
+
+        playerBody.position.set(gameCoordinates.x, gameCoordinates.y)
+
+        Gdx.app.log("tp after", playerBody.position.toString())
+
+        val timer = Timer()
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                blinkCharges++
+            }
+        }, 5000)
     }
 }

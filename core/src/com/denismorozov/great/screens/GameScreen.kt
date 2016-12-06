@@ -126,9 +126,8 @@ class GameScreen(private val game: GreatGame) : Screen {
         engine.addSystem(MovementSystem(gameCamera))
         engine.addSystem(RenderingSystem(game.batch))
         engine.addSystem(PhysicsSystem(world))
-        engine.addSystem(PhysicsDebugSystem(world, gameCamera))
-        val chasing = EnemyPathfinding() //consider adding later
-//        chasing.setProcessing(false)
+//        engine.addSystem(PhysicsDebugSystem(world, gameCamera))
+        val chasing = EnemyPathfinding()
         engine.addSystem(chasing)
 
         enemyCounter = CounterListener()
